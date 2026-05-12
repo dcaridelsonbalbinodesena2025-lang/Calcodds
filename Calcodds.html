@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora HT Pro</title>
+    <style>
+        body { font-family: sans-serif; background-color: #1a1a1a; color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .container { width: 340px; padding: 20px; }
+        #status-box { border-radius: 15px; padding: 20px; text-align: center; margin-bottom: 25px; display: none; }
+        .market-label { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; font-weight: bold; opacity: 0.9; }
+        .status-title { font-size: 22px; font-weight: bold; margin: 0; }
+        .status-icon { font-size: 30px; margin: 10px 0; }
+        .status-desc { font-size: 16px; font-weight: bold; margin: 0; }
+        .bg-sucesso { background-color: #053d1e; border: 2px solid #00ff88; color: #00ff88; }
+        .bg-erro { background-color: #3d0505; border: 2px solid #ff3333; color: #ff3333; }
+        .visor-black { background-color: #000; border-radius: 10px; padding: 15px; text-align: center; margin-bottom: 30px; border: 1px solid #333; }
+        .visor-label { color: #888; font-size: 12px; letter-spacing: 1px; margin-bottom: 5px; }
+        .visor-value { color: #00ff88; font-size: 32px; font-weight: bold; }
+        .row { display: flex; gap: 15px; margin-bottom: 20px; }
+        .col { flex: 1; }
+        .input-label { display: block; font-weight: bold; font-size: 16px; margin-bottom: 10px; text-align: center; }
+        input { width: 100%; background-color: #333; border: 1px solid #444; border-radius: 4px; padding: 12px; color: white; font-size: 18px; text-align: center; box-sizing: border-box; }
+        .input-analise { background-color: #222; color: #666; margin-bottom: 5px; cursor: pointer; border: 1px dashed #444; }
+        .hint { font-size: 10px; color: #555; margin-bottom: 25px; display: block; }
+        .btn-clear { background-color: #00ff88; color: black; border: none; border-radius: 8px; width: 100%; padding: 15px; font-size: 20px; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="status-box">
+        <div id="st-market" class="market-label"></div>
+        <p class="status-title" id="st-title"></p>
+        <div class="status-icon" id="st-icon"></div>
+        <p class="status-desc" id="st-desc"></p>
+    </div>
+
+    <div class="visor-black">
+        <div class="visor-label">PROBABILIDADE REAL DO MERCADO</div>
+        <div class="visor-value" id="prob-real">0.00%</div>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <span class="input-label">0.5 Over Ht</span>
+            <input type="tel" id="oddOver" placeholder="000" maxlength="3" oninput="formatarOdd(this, 'oddUnder')">
+        </div>
+        <div class="col">
+            <span class="input-label">0.5 Under Ht</span>
+            <input type="tel" id="oddUnder" placeholder="000" maxlength="3" oninput="formatarOdd(this, null)">
+        </div>
+    </div>
+
+    <span class="input-label" style="text-align: left;">Sua Análise Estatística (%)</span>
+    <input type="number" id="minhaAnalise" class="input-analise" value="70" readonly 
+           ondblclick="ativarEdicao(this)" onblur="desativarEdicao(this)">
+    <span class="hint">Dê dois cliques para editar o valor.</span>
+
+    <button class="btn-clear" onclick="limpar()">Limpar dados das odds</button>
+</div>
+
+<script>
+    function formatarOdd(input, proximoCampoId) {
+        let valor = input.value.replace(/\D/g, ""); 
+        
+        if (valor.length === 3) {
+            let formatado = valor.substring(0, 1) + "." + valor.substring(1, 3);
+            input.value = formatado;
+
+            if (proximoCampoId) {
+                document.getElementById(proximoCampoId).focus();
+            } else {
+                calcular();
+            }
+        }
+    }
+
+    function ativarEdicao(el) {
+        el.readOnly = false;
+        el.style.backgroundColor = "#444";
+        el.style.color = "#00ff88";
+        el.style.border = "1px solid #00ff88";
+        el.focus();
+    }
+
+    function desativarEdicao(el) {
+        el.readOnly = true;
+        el.style.backgroundColor = "#222";
+        el.style.color = "#666";
+        el.style.border = "1px dashed #444";
+        calcular();
+    }
+
+    function calcular() {
+        const overVal = document.getElementById('oddOver').value;
+        const underVal = document.getElementById('oddUnder').value;
+        const minhaEstatistica = parseFloat(document.getElementById('minhaAnalise').value);
+        
+        const box = document.getElementById('status-box');
+        const probRealVisor = document.getElementById('prob-real');
+
+        if (overVal.includes('.') && underVal.includes('.')) {
+            const over = parseFloat(overVal);
+            const under = parseFloat(underVal);
+
+            const pOver = 100 / over;
+            const pUnder = 100 / under;
+            const mercadoReal = (pOver / (pOver + pUnder)) * 100;
+            
+            probRealVisor.innerText = mercadoReal.toFixed(2) + "%";
+            box.style.display = "block";
+
+            if (mercadoReal >= minhaEstatistica) {
+                box.className = "bg-sucesso";
+                document.getElementById('st-market').innerText = "0.5 OVER GOL NA PARTIDA";
+                document.getElementById('st-title').innerText = "VALOR ENCONTRADO!";
+                document.getElementById('st-icon').innerText = "✅";
+                document.getElementById('st-desc').innerText = "O mercado confirma sua análise!";
+            } else {
+                box.className = "bg-erro";
+                // Alteração solicitada aqui:
+                document.getElementById('st-market').innerHTML = "TENTE OUTRA PARTIDA <br> OU 5.5 UNDER GOL NA PARTIDA";
+                
+                document.getElementById('st-title').innerText = "SEM VALOR!";
+                document.getElementById('st-icon').innerText = "❌";
+                document.getElementById('st-desc').innerText = "Abaixo do seu percentual mínimo.";
+            }
+        }
+    }
+
+    function limpar() {
+        document.getElementById('oddOver').value = "";
+        document.getElementById('oddUnder').value = "";
+        document.getElementById('status-box').style.display = "none";
+        document.getElementById('prob-real').innerText = "0.00%";
+        document.getElementById('oddOver').focus();
+    }
+</script>
+
+</body>
+</html>
