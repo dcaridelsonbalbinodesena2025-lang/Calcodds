@@ -38,14 +38,17 @@
         .btn-add { background: #006600; color: white; border: none; padding: 15px; font-weight: bold; font-size: 18px; border-radius: 5px; }
         .btn-his { background: #ffcc00; color: black; border: none; padding: 15px; font-weight: bold; font-size: 18px; border-radius: 5px; }
 
-        /* Histórico Modal */
-        #modal-historico { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); overflow-y: auto; z-index: 100; }
-        .hist-item { background: #333; margin: 10px; padding: 10px; border-radius: 5px; font-size: 13px; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid #ffcc00; }
+        /* Histórico Modal com Cabeçalho Fixo */
+        #modal-historico { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); overflow-y: auto; z-index: 100; }
+        .header-fixed { position: sticky; top: 0; background: #111; padding: 15px 0; z-index: 10; border-bottom: 1px solid #444; }
+        
+        .hist-item { background: #333; margin: 10px; padding: 10px; border-radius: 5px; font-size: 13px; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid #ffcc00; position: relative; }
         .btn-green { background: #008800; color: white; border: none; padding: 5px 10px; margin: 2px; }
         .btn-red { background: #880000; color: white; border: none; padding: 5px 10px; margin: 2px; }
+        .btn-excluir { background: #ff0000; color: white; border: none; border-radius: 50%; width: 22px; height: 22px; font-weight: bold; font-size: 12px; cursor: pointer; margin-left: 10px; }
 
-        /* Novo Modal de Estatísticas */
-        #modal-stats { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #111; overflow-y: auto; z-index: 110; padding-bottom: 30px; }
+        /* Modal de Estatísticas com Cabeçalho Fixo */
+        #modal-stats { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #111; overflow-y: auto; z-index: 110; }
         .stats-card { background: #2a2a2a; margin: 10px; padding: 15px; border-radius: 8px; border-bottom: 3px solid #00ff88; }
         .stats-header { font-size: 16px; color: #ffcc00; font-weight: bold; border-bottom: 1px solid #444; padding-bottom: 5px; margin-bottom: 10px; }
         .stats-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 5px; }
@@ -105,19 +108,21 @@
 </div>
 
 <div id="modal-historico">
-    <h2 style="text-align:center; color:#ffcc00;">HISTÓRICO</h2>
+    <div class="header-fixed">
+        <h2 style="text-align:center; color:#ffcc00; margin: 0 0 15px 0;">HISTÓRICO</h2>
+        <button onclick="gerarEstatisticas()" style="display:block; width:90%; margin: 0 auto; padding: 15px; background: #006600; color: white; border: none; font-weight: bold; border-radius: 5px; font-size: 16px;">📊 ANALISAR ASSERTIVIDADE</button>
+    </div>
     
-    <!-- Botão de Analisar Odds Adicionado aqui -->
-    <button onclick="gerarEstatisticas()" style="display:block; width:90%; margin: 0 auto 15px; padding: 15px; background: #006600; color: white; border: none; font-weight: bold; border-radius: 5px; font-size: 16px;">📊 ANALISAR ASSERTIVIDADE</button>
-
     <div id="lista-historico"></div>
-    <button onclick="toggleHistorico(false)" style="display:block; width:80%; margin: 20px auto; padding: 15px; background: white; border: none; font-weight: bold;">VOLTAR</button>
+    
+    <button onclick="toggleHistorico(false)" style="display:block; width:80%; margin: 20px auto; padding: 15px; background: white; color: black; border: none; font-weight: bold;">VOLTAR</button>
     <button onclick="apagarTudo()" style="display:block; width:80%; margin: 10px auto; padding: 10px; background: #880000; color: white; border: none; border-radius: 5px;">APAGAR TODO HISTÓRICO</button>
 </div>
 
-<!-- Modal de Estatísticas (Nova Página) -->
 <div id="modal-stats">
-    <h2 style="text-align:center; color:#00ff88; margin-top: 20px;">ASSERTIVIDADE POR ODD</h2>
+    <div class="header-fixed">
+        <h2 style="text-align:center; color:#00ff88; margin: 0;">ASSERTIVIDADE POR ODD</h2>
+    </div>
     <div id="lista-stats"></div>
     <button onclick="document.getElementById('modal-stats').style.display='none'" style="display:block; width:80%; margin: 20px auto; padding: 15px; background: #ffcc00; color: black; border: none; font-weight: bold; border-radius: 5px;">FECHAR ANÁLISE</button>
 </div>
@@ -142,6 +147,14 @@
     function apagarTudo() {
         if(confirm("Deseja apagar permanentemente todo o histórico?")) {
             historico = [];
+            salvarHistorico();
+            toggleHistorico(true);
+        }
+    }
+
+    function excluirItem(index) {
+        if(confirm("Excluir este dado do histórico?")) {
+            historico.splice(index, 1);
             salvarHistorico();
             toggleHistorico(true);
         }
@@ -288,11 +301,12 @@
                         <div>
                             <b>O: ${item.over} | U: ${item.under}</b><br>
                             ${item.mercado}<br>
-                            <small>Resultado: ${item.resultado}</small>
+                            <small>Res: ${item.resultado}</small>
                         </div>
-                        <div>
+                        <div style="display:flex; align-items:center;">
                             <button class="btn-green" onclick="marcar(${index}, 'GREEN')">G</button>
                             <button class="btn-red" onclick="marcar(${index}, 'RED')">R</button>
+                            <button class="btn-excluir" onclick="excluirItem(${index})">X</button>
                         </div>
                     </div>
                 `;
@@ -306,13 +320,11 @@
         toggleHistorico(true);
     }
 
-    // NOVA FUNÇÃO DE ESTATÍSTICAS
     function gerarEstatisticas() {
         if (historico.length === 0) return alert("Histórico vazio!");
 
         const grupos = {};
         
-        // Agrupa por combinação de odds
         historico.forEach(item => {
             const chave = `O: ${item.over} | U: ${item.under}`;
             if (!grupos[chave]) {
@@ -326,7 +338,6 @@
         const listaStats = document.getElementById('lista-stats');
         listaStats.innerHTML = "";
 
-        // Cria os cards de cada odd
         for (const odd in grupos) {
             const g = grupos[odd];
             const percGreen = ((g.green / g.total) * 100).toFixed(1);
@@ -336,7 +347,7 @@
                 <div class="stats-card">
                     <div class="stats-header">${odd}</div>
                     <div class="stats-row">
-                        <span>Frequência no Histórico:</span>
+                        <span>Frequência:</span>
                         <span><b>${g.total} vez(es)</b></span>
                     </div>
                     <div class="stats-row">
